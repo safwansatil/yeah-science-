@@ -8,21 +8,22 @@ ColumnLayout {
     RowLayout {
         spacing: 6
         Rectangle {
-            width: 3; height: 12; color: "#f3c623"; radius: 1
+            width: 3; height: 10; color: "#f3c623"; radius: 1
         }
         Label {
-            text: "TELEOPERATIONS CONSOLE"
-            color: "#8a99ad"
-            font.letterSpacing: 1.2
-            font.pixelSize: 11
+            text: "// TELEOPERATIONS COMMAND DECK"
+            color: "#00e676"
+            font.letterSpacing: 1.5
+            font.pixelSize: 10
             font.bold: true
+            font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace"
         }
     }
 
     Label {
-        text: "Hold control pad button to drive"
-        color: "#e2e8f0"
-        font.pixelSize: 15
+        text: "Hold control pad button to command drive"
+        color: "#dce5ef"
+        font.pixelSize: 13
         font.bold: true
     }
 
@@ -30,57 +31,63 @@ ColumnLayout {
         columns: 3
         rowSpacing: 6; columnSpacing: 6
 
-        Item { Layout.preferredWidth: 74 }
+        Item { Layout.preferredWidth: 72 }
         Button {
             objectName: "forwardButton"
-            text: "Forward [W]"
-            Layout.preferredWidth: 92
+            text: "▲ W  FWD"
+            Layout.preferredWidth: 96
             enabled: station.armed
             onPressed: station.setDrive(1, 1)
             onReleased: station.stop()
             onCanceled: station.stop()
         }
-        Item { Layout.preferredWidth: 74 }
+        Item { Layout.preferredWidth: 72 }
 
         Button {
-            text: "Left [A]"
-            Layout.preferredWidth: 78
+            text: "◀ A  LEFT"
+            Layout.preferredWidth: 84
             enabled: station.armed
             onPressed: station.setDrive(-1, 1)
             onReleased: station.stop()
             onCanceled: station.stop()
         }
         Button {
-            text: "ESTOP"
-            Layout.preferredWidth: 92
+            text: "✖ E-STOP"
+            Layout.preferredWidth: 96
             palette.button: "#e63946"
             palette.buttonText: "#ffffff"
             onClicked: station.stop()
         }
         Button {
-            text: "Right [D]"
-            Layout.preferredWidth: 78
+            text: "RIGHT  D ▶"
+            Layout.preferredWidth: 84
             enabled: station.armed
             onPressed: station.setDrive(1, -1)
             onReleased: station.stop()
             onCanceled: station.stop()
         }
 
-        Item { Layout.preferredWidth: 74 }
+        Item { Layout.preferredWidth: 72 }
         Button {
-            text: "Reverse [S]"
-            Layout.preferredWidth: 92
+            text: "▼ S  REV"
+            Layout.preferredWidth: 96
             enabled: station.armed
             onPressed: station.setDrive(-1, -1)
             onReleased: station.stop()
             onCanceled: station.stop()
         }
-        Item { Layout.preferredWidth: 74 }
+        Item { Layout.preferredWidth: 72 }
     }
 
     RowLayout {
         spacing: 8
-        Label { text: "THROTTLE"; color: "#8a99ad"; font.pixelSize: 10; font.bold: true }
+        Label {
+            text: "THROTTLE:"
+            color: "#7a8b9e"
+            font.pixelSize: 10
+            font.bold: true
+            font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace"
+        }
         Slider {
             Layout.fillWidth: true
             from: 0.1; to: 1.0; value: station.speed
@@ -97,12 +104,12 @@ ColumnLayout {
 
     Rectangle {
         Layout.fillWidth: true; height: 26
-        color: "#161e27"
-        radius: 4
-        border.color: "#212c38"
+        color: "#0a0e13"
+        radius: 3
+        border.color: "#182330"
         Label {
             anchors.centerIn: parent
-            text: "CMD PWM  L: " + station.leftCommand.toFixed(2) + "  |  R: " + station.rightCommand.toFixed(2)
+            text: "CMD_PWM: L=" + station.leftCommand.toFixed(2) + " | R=" + station.rightCommand.toFixed(2)
             color: "#00e676"
             font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace"
             font.pixelSize: 11
@@ -111,17 +118,18 @@ ColumnLayout {
     }
 
     Rectangle {
-        Layout.fillWidth: true; height: 24
-        color: "#211b10"
-        radius: 3
+        Layout.fillWidth: true; height: 22
+        color: "#1d170b"
+        radius: 2
         border.color: "#f3c623"
         border.width: 1
         Label {
             anchors.centerIn: parent
-            text: "KEYBOARD TELEOP: AWAITING IMPLEMENTATION"
+            text: "[ TASK ] KEYBOARD TELEOP: AWAITING IMPLEMENTATION"
             color: "#f3c623"
-            font.pixelSize: 10
+            font.pixelSize: 9
             font.bold: true
+            font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace"
             font.letterSpacing: 0.5
         }
     }
