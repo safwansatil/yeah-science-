@@ -52,7 +52,7 @@ ColumnLayout {
     }
     Label {
         text: "Command L " + station.leftCommand.toFixed(2) + " / R " + station.rightCommand.toFixed(2)
-        color: "#94a9b7"; font.family: "monospace"; font.pixelSize: 12
+        color: "#94a9b7"; font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace"; font.pixelSize: 12
     }
     Label { text: "Keyboard control: awaiting implementation"; color: "#dcb372"; font.pixelSize: 11 }
 }

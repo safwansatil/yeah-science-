@@ -8,7 +8,7 @@ Panel {
         RowLayout {
             Label { text: "EVENT CONSOLE"; color: "#94a9b7"; font.pixelSize: 11; font.letterSpacing: 1 }
             Item { Layout.fillWidth: true }
-            Button { text: "Clear"; flat: true; onClicked: station.clearEvents() }
+            Button { text: "Clear"; onClicked: station.clearEvents() }
         }
         ListView {
             id: lines
@@ -20,7 +20,7 @@ Panel {
                 required property string modelData
                 width: lines.width - 14
                 text: modelData; textFormat: Text.PlainText
-                wrapMode: Text.Wrap; color: "#c5d2d9"; font.family: "monospace"; font.pixelSize: 12
+                wrapMode: Text.Wrap; color: "#c5d2d9"; font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace"; font.pixelSize: 12
             }
         }
     }

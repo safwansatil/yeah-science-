@@ -4,8 +4,8 @@ import QtQuick.Layouts
 
 ApplicationWindow {
     id: root
-    width: 1180; height: 790
-    minimumWidth: 980; minimumHeight: 720
+    width: 1180; height: 860
+    minimumWidth: 1020; minimumHeight: 820
     visible: true; color: "#0e1922"
     title: "Yeah, Science | Project Altair"
     palette.button: "#293e4b"
@@ -28,7 +28,7 @@ ApplicationWindow {
             ColumnLayout {
                 spacing: 5
                 Label { text: station.connected ? "CONNECTED" : "DISCONNECTED"; color: station.connected ? "#82cbb2" : "#94a9b7"; font.pixelSize: 12; font.bold: true }
-                Label { text: station.endpoint; color: "#94a9b7"; font.family: "monospace"; font.pixelSize: 11 }
+                Label { text: station.endpoint; color: "#94a9b7"; font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace"; font.pixelSize: 11 }
             }
             Button { objectName: "connectButton"; text: station.connected ? "Disconnect" : "Connect"; onClicked: station.connected ? station.disconnectLink() : station.connectLink() }
             Button { text: "Session notes"; onClicked: settings.open() }
@@ -59,11 +59,11 @@ ApplicationWindow {
                 }
             }
         }
-        EventLog { Layout.fillWidth: true; Layout.preferredHeight: 148 }
+        EventLog { Layout.fillWidth: true; Layout.preferredHeight: 128 }
         RowLayout {
             Label { text: "LOCAL TEST BENCH"; color: "#94a9b7"; font.pixelSize: 10; font.letterSpacing: 1.3 }
             Item { Layout.fillWidth: true }
-            Label { text: "RX " + station.rxBytes + " B   /   TX " + station.txBytes + " B   /   rejected " + station.invalidPackets; color: "#94a9b7"; font.pixelSize: 11; font.family: "monospace" }
+            Label { text: "RX " + station.rxBytes + " B   /   TX " + station.txBytes + " B   /   rejected " + station.invalidPackets; color: "#94a9b7"; font.pixelSize: 11; font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace" }
         }
     }
     SettingsPanel { id: settings }

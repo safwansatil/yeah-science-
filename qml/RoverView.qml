@@ -3,7 +3,7 @@ import QtQuick.Controls
 
 Panel {
     id: field
-    property var data: station.telemetryData
+    property var readings: station.telemetryData
     clip: true
     Canvas {
         id: grid
@@ -32,9 +32,9 @@ Panel {
     Item {
         id: rover
         width: 48; height: 36
-        x: field.width / 2 + field.data.x * 36 - width / 2
-        y: field.height / 2 - field.data.y * 36 - height / 2
-        rotation: -field.data.heading * 180 / Math.PI
+        x: field.width / 2 + field.readings.x * 36 - width / 2
+        y: field.height / 2 - field.readings.y * 36 - height / 2
+        rotation: -field.readings.heading * 180 / Math.PI
         Rectangle { anchors.centerIn: parent; width: 34; height: 24; radius: 5; color: "#dfb574" }
         Repeater {
             model: 4
