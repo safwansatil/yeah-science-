@@ -128,6 +128,7 @@ For controlled communication failures, see [the simulator scenarios](docs/protoc
 - **Address already in use:** another station, simulator or probe may still be running. Close the old process. If needed, make an ignored `config/local.json` with different `rover_port` and `station_port` values and restart both processes.
 - **Qt cannot load its platform plugin:** check that you have a desktop session and the Ubuntu libraries listed above. Do not change application logic to work around a missing system library.
 - **Permission denied for `./scripts/launch.sh`:** investigate its file permissions as part of Section 1. You can use `python -m app` while you work on that.
+- **The permission change does not appear in Git:** use a Linux filesystem for this exercise where possible. A Windows-hosted checkout may not detect Unix executable-bit changes; check the file mode in Git's index as well.
 - **Connected, but nothing moves:** make sure the simulator is running with matching ports, use the normal scenario, and enable drive. Remember that investigating the meaning of "connected" is part of your task.
 
 ## Making your work reviewable
