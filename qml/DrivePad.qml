@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 ColumnLayout {
-    spacing: 10
+    spacing: 6
     Label { text: "MANUAL DRIVE"; color: "#94a9b7"; font.letterSpacing: 1.3; font.pixelSize: 11 }
     Label { text: "Hold a button to move"; color: "#e8eff1"; font.pixelSize: 17 }
     GridLayout {

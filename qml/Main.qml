@@ -46,7 +46,7 @@ ApplicationWindow {
             Panel {
                 Layout.preferredWidth: 306; Layout.fillHeight: true
                 ColumnLayout {
-                    anchors.fill: parent; anchors.margins: 20; spacing: 12
+                    anchors.fill: parent; anchors.margins: 20; spacing: 8
                     RowLayout {
                         Label { text: "CONTROL"; color: "#94a9b7"; font.pixelSize: 11; font.letterSpacing: 1 }
                         Item { Layout.fillWidth: true }
