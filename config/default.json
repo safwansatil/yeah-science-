@@ -1,0 +1,8 @@
+{
+  "host": "127.0.0.1",
+  "rover_port": 45820,
+  "station_port": 45821,
+  "drive_speed": 0.55,
+  "send_period_ms": 50,
+  "stale_after_ms": 1000
+}
