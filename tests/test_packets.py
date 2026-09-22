@@ -11,7 +11,9 @@ class PacketTests(unittest.TestCase):
     def test_bad_input_is_rejected(self):
         cases = [b"noise", b"{}", b"[]", b"null", b"x" * 2049,
                  b'{"v":1,"type":"drive","seq":1,"left":NaN,"right":0}',
-                 b'{"v":1,"type":"drive","seq":1,"left":true,"right":0}']
+                 b'{"v":1,"type":"drive","seq":1,"left":true,"right":0}',
+                 b'{"v":true,"type":"drive","seq":1,"left":0,"right":0}',
+                 b'{"v":1,"type":"drive","seq":1,"left":1e999999999999999999,"right":0}']
         for raw in cases:
             with self.subTest(raw=raw[:60]), self.assertRaises(ValueError):
                 decode(raw)

@@ -8,7 +8,7 @@ TELEMETRY_FIELDS = ("x", "y", "heading", "left", "right", "battery")
 
 
 def _number(value):
-    return type(value) in NUMBERS and math.isfinite(value)
+    return type(value) in NUMBERS and type(value) is not bool and math.isfinite(value)
 
 
 def decode(raw):
@@ -16,9 +16,9 @@ def decode(raw):
         raise ValueError("Invalid packet size")
     try:
         packet = json.loads(raw)
-    except (ValueError, UnicodeError, RecursionError) as exc:
+    except (ValueError, TypeError, ArithmeticError, UnicodeError, RecursionError, OverflowError) as exc:
         raise ValueError("Invalid JSON") from exc
-    if not isinstance(packet, dict) or packet.get("v") != 1:
+    if not isinstance(packet, dict) or type(packet.get("v")) is not int or packet["v"] != 1:
         raise ValueError("Unsupported packet version")
     if type(packet.get("seq")) is not int or packet["seq"] < 0:
         raise ValueError("Invalid sequence")
