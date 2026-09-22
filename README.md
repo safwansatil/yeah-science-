@@ -1,7 +1,5 @@
 # Yeah, Science.
 
-Project Altair's software recruitment playground. Inherit a messy rover codebase, investigate what's broken, and make it your own.
-
 This is a small ground station and a rover simulator. The station already has mouse controls, telemetry and a field view. Your work is to get comfortable in its repository, add keyboard driving and investigate a connection indicator that cannot quite be trusted.
 
 You do not need a rover, a radio, a GPU or previous Qt experience. You will need Python, a desktop session and a willingness to look things up. AI tools are welcome. We want to understand the decisions you made and how you checked your work.

@@ -1,4 +1,0 @@
-2026-01-01 12:00:00 INFO bench: synthetic practice log; no real radio data
-2026-01-01 12:00:01 INFO station: local socket opened
-2026-01-01 12:00:03 WARNING bench: no rover telemetry observed during this run
-2026-01-01 12:00:04 INFO bench: check process and configured ports before changing code
