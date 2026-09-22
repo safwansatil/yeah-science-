@@ -6,17 +6,50 @@ Popup {
     id: settings
     objectName: "settingsPanel"
     anchors.centerIn: parent
-    width: 440; height: 280
+    width: 460; height: 300
     modal: true; focus: true
     onOpened: station.stop()
-    background: Panel {}
+    background: Panel {
+        border.color: "#f3c623"
+        border.width: 1
+    }
     ColumnLayout {
         anchors.fill: parent; anchors.margins: 20; spacing: 12
-        Label { text: "Session notes"; color: "#e8eff1"; font.pixelSize: 22 }
-        Label { text: "Leave yourself a note for this run. Typing here should never drive the rover."; color: "#94a9b7"; wrapMode: Text.Wrap; Layout.fillWidth: true }
-        TextField { objectName: "noteInput"; Layout.fillWidth: true; placeholderText: "What are you testing?" }
-        Label { text: "Endpoint: " + station.endpoint + "\nEdit config/local.json and restart to change ports."; color: "#94a9b7"; font.pixelSize: 12 }
+        RowLayout {
+            spacing: 8
+            Rectangle {
+                width: 24; height: 24; radius: 3
+                color: "#1f2a37"
+                border.color: "#f3c623"; border.width: 1
+                Label { anchors.centerIn: parent; text: "N"; color: "#f3c623"; font.bold: true }
+            }
+            Label { text: "Session Operator Notes"; color: "#e2e8f0"; font.pixelSize: 20; font.bold: true }
+        }
+        Label {
+            text: "Leave notes for your telemetry run. Typing text in input fields must NEVER transmit drive movement to the rover."
+            color: "#8a99ad"
+            wrapMode: Text.Wrap
+            Layout.fillWidth: true
+            font.pixelSize: 12
+        }
+        TextField {
+            objectName: "noteInput"
+            Layout.fillWidth: true
+            placeholderText: "What scenario or feature are you testing?"
+            palette.base: "#0a0e13"
+            palette.text: "#e2e8f0"
+        }
+        Label {
+            text: "Endpoint: " + station.endpoint + "\nEdit config/local.json and restart to change ports."
+            color: "#566b82"
+            font.pixelSize: 11
+            font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace"
+        }
         Item { Layout.fillHeight: true }
-        Button { text: "Back to station"; onClicked: settings.close() }
+        Button {
+            text: "Back to Station"
+            Layout.alignment: Qt.AlignRight
+            onClicked: settings.close()
+        }
     }
 }
