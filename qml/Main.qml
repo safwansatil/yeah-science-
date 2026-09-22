@@ -4,8 +4,8 @@ import QtQuick.Layouts
 
 ApplicationWindow {
     id: root
-    width: 1180; height: 860
-    minimumWidth: 1020; minimumHeight: 820
+    width: 1180; height: 740
+    minimumWidth: 1020; minimumHeight: 700
     visible: true; color: "#080b10"
     title: "Yeah, Science | Project Altair Ground Control"
     palette.button: "#16202c"

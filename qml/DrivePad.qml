@@ -52,7 +52,7 @@ ColumnLayout {
             onCanceled: station.stop()
         }
         Button {
-            text: "✖ E-STOP"
+            text: "✖ STOP"
             Layout.preferredWidth: 96
             palette.button: "#e63946"
             palette.buttonText: "#ffffff"
@@ -109,7 +109,7 @@ ColumnLayout {
         border.color: "#182330"
         Label {
             anchors.centerIn: parent
-            text: "CMD_PWM: L=" + station.leftCommand.toFixed(2) + " | R=" + station.rightCommand.toFixed(2)
+            text: "CMD_SPEED: L=" + station.leftCommand.toFixed(2) + " | R=" + station.rightCommand.toFixed(2)
             color: "#00e676"
             font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace"
             font.pixelSize: 11

@@ -7,7 +7,7 @@ Popup {
     objectName: "settingsPanel"
     anchors.centerIn: parent
     width: 460; height: 300
-    modal: true; focus: true
+    modal: false; focus: true
     onOpened: station.stop()
     background: Panel {
         border.color: "#f3c623"
