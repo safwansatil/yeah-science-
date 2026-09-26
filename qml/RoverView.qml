@@ -69,7 +69,7 @@ Panel {
         spacing: 8
         Rectangle {
             width: 8; height: 8; radius: 4
-            color: "#00e676"
+            color: station.telemetryFresh ? "#00e676" : (station.connectionState === "stale" ? "#e63946" : "#f3c623")
             anchors.verticalCenter: parent.verticalCenter
         }
         Label {
@@ -93,6 +93,7 @@ Panel {
     Item {
         id: rover
         width: 64; height: 50
+        opacity: station.telemetryFresh ? 1.0 : 0.35
         x: field.width / 2 + field.readings.x * 36 - width / 2
         y: field.height / 2 - field.readings.y * 36 - height / 2
 
@@ -156,8 +157,10 @@ Panel {
     // Footnote Pose Coordinates Banner
     Label {
         anchors { bottom: parent.bottom; left: parent.left; margins: 12 }
-        text: "POSE: X=" + field.readings.x.toFixed(2) + "m  Y=" + field.readings.y.toFixed(2) + "m  HDG=" + (field.readings.heading * 180 / Math.PI).toFixed(1) + "°"
-        color: "#7a8b9e"
+        text: station.telemetryFresh
+              ? ("POSE: X=" + field.readings.x.toFixed(2) + "m  Y=" + field.readings.y.toFixed(2) + "m  HDG=" + (field.readings.heading * 180 / Math.PI).toFixed(1) + "°")
+              : (station.connectionState === "stale" ? "POSE: STALE (NO RECENT TELEMETRY)" : "POSE: UNAVAILABLE (AWAITING TELEMETRY)")
+        color: station.connectionState === "stale" ? "#e63946" : "#7a8b9e"
         font.pixelSize: 10
         font.bold: true
         font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace"

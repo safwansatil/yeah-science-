@@ -21,7 +21,7 @@ ColumnLayout {
     }
 
     Label {
-        text: "Hold control pad button to command drive"
+        text: "Hold control pad or WASD / Arrow keys to drive"
         color: "#dce5ef"
         font.pixelSize: 13
         font.bold: true
@@ -34,6 +34,7 @@ ColumnLayout {
         Item { Layout.preferredWidth: 72 }
         Button {
             objectName: "forwardButton"
+            focusPolicy: Qt.NoFocus
             text: "▲ W  FWD"
             Layout.preferredWidth: 96
             enabled: station.armed
@@ -44,6 +45,7 @@ ColumnLayout {
         Item { Layout.preferredWidth: 72 }
 
         Button {
+            focusPolicy: Qt.NoFocus
             text: "◀ A  LEFT"
             Layout.preferredWidth: 84
             enabled: station.armed
@@ -52,6 +54,7 @@ ColumnLayout {
             onCanceled: station.stop()
         }
         Button {
+            focusPolicy: Qt.NoFocus
             text: "✖ STOP"
             Layout.preferredWidth: 96
             palette.button: "#e63946"
@@ -59,6 +62,7 @@ ColumnLayout {
             onClicked: station.stop()
         }
         Button {
+            focusPolicy: Qt.NoFocus
             text: "RIGHT  D ▶"
             Layout.preferredWidth: 84
             enabled: station.armed
@@ -69,6 +73,7 @@ ColumnLayout {
 
         Item { Layout.preferredWidth: 72 }
         Button {
+            focusPolicy: Qt.NoFocus
             text: "▼ S  REV"
             Layout.preferredWidth: 96
             enabled: station.armed
@@ -89,6 +94,7 @@ ColumnLayout {
             font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace"
         }
         Slider {
+            focusPolicy: Qt.NoFocus
             Layout.fillWidth: true
             from: 0.1; to: 1.0; value: station.speed
             onMoved: station.setSpeed(value)
@@ -119,14 +125,14 @@ ColumnLayout {
 
     Rectangle {
         Layout.fillWidth: true; height: 22
-        color: "#1d170b"
+        color: station.armed ? "#0d2618" : "#1d170b"
         radius: 2
-        border.color: "#f3c623"
+        border.color: station.armed ? "#00e676" : "#f3c623"
         border.width: 1
         Label {
             anchors.centerIn: parent
-            text: "[ TASK ] KEYBOARD TELEOP: AWAITING IMPLEMENTATION"
-            color: "#f3c623"
+            text: station.armed ? "[ KEYBOARD TELEOP: WASD & ARROWS READY ]" : "[ KEYBOARD TELEOP: ENABLE DRIVE TO USE WASD / ARROWS ]"
+            color: station.armed ? "#00e676" : "#f3c623"
             font.pixelSize: 9
             font.bold: true
             font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace"
