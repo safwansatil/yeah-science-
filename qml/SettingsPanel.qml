@@ -8,7 +8,13 @@ Popup {
     anchors.centerIn: parent
     width: 460; height: 300
     modal: false; focus: true
-    onOpened: station.stop()
+    onOpened: {
+        station.setNotesOpen(true)
+        noteInput.forceActiveFocus()
+    }
+    onClosed: {
+        station.setNotesOpen(false)
+    }
     background: Panel {
         border.color: "#f3c623"
         border.width: 1
@@ -33,6 +39,7 @@ Popup {
             font.pixelSize: 12
         }
         TextField {
+            id: noteInput
             objectName: "noteInput"
             Layout.fillWidth: true
             placeholderText: "What scenario or feature are you testing?"
