@@ -8,3 +8,7 @@ dist/
 .idea/
 .DS_Store
 config/local.json
+clear
+runtime/*.log
+runtime/station.log
+logs_saved.txt

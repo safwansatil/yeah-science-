@@ -14,7 +14,66 @@ ApplicationWindow {
     palette.text: "#dce5ef"
     palette.base: "#0f151d"
     font.family: "Segoe UI"
-    onActiveChanged: if (!active) station.stop()
+    Component.onCompleted: {        
+        function walk(item) {
+            if (!item) return;
+            if (item.toString().indexOf("QQuickButton") !== -1 ||
+                item.toString().indexOf("QQuickSlider") !== -1) {
+                item.focusPolicy = Qt.NoFocus;
+            }
+            for (var i = 0; i < item.children.length; i++) {
+                walk(item.children[i]);
+            }
+        }
+        walk(contentItem);
+    }
+    onActiveChanged: {
+        if (active) keyCatcher.forceActiveFocus()
+        else station.stop()
+    }
+
+    Item {
+        id: keyCatcher
+        focus: true
+        width: 0; height: 0
+        function keyName(qtKey) {
+            switch (qtKey) {
+                case Qt.Key_W: return "W";
+                case Qt.Key_S: return "S";
+                case Qt.Key_A: return "A";
+                case Qt.Key_D: return "D";
+                case Qt.Key_Up: return "Up";
+                case Qt.Key_Down: return "Down";
+                case Qt.Key_Left: return "Left";
+                case Qt.Key_Right: return "Right";
+                default: return "";
+            }
+        }
+
+        Keys.onPressed: (event) => {
+            if (event.isAutoRepeat) return;
+            var k = keyName(event.key);
+            if (k !== "") {
+                station.keyDown(k);
+                event.accepted = true;
+            }
+        }
+
+        Keys.onReleased: (event) => {
+            if (event.isAutoRepeat) return;
+            var k = keyName(event.key);
+            if (k !== "") {
+                station.keyUp(k);
+                event.accepted = true;
+            }
+        }
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        z: -1
+        onClicked: keyCatcher.forceActiveFocus()
+    }
 
     ColumnLayout {
         anchors.fill: parent; anchors.margins: 18; spacing: 12
@@ -58,12 +117,27 @@ ApplicationWindow {
                 spacing: 8
                 Rectangle {
                     width: 8; height: 8; radius: 4
-                    color: station.connected ? "#00e676" : "#4a5568"
+                    color: {
+                        if (station.connectionState === "LIVE")    return "#00e676"
+                        if (station.connectionState === "WAITING") return "#f3c623"
+                        if (station.connectionState === "STALE")   return "#e63946"
+                        return "#4a5568"
+                    }
                     Layout.alignment: Qt.AlignVCenter
                 }
                 ColumnLayout {
                     spacing: 1
-                    Label { text: station.connected ? "CONNECTED" : "DISCONNECTED"; color: station.connected ? "#00e676" : "#7a8b9e"; font.pixelSize: 11; font.bold: true; font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace" }
+                    Label {
+                        text: station.connectionState
+                        color: {
+                            if (station.connectionState === "LIVE")    return "#00e676"
+                            if (station.connectionState === "WAITING") return "#f3c623"
+                            if (station.connectionState === "STALE")   return "#e63946"
+                            return "#7a8b9e"
+                        }
+                        font.pixelSize: 11; font.bold: true
+                        font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace"
+                    }
                     Label { text: station.endpoint; color: "#485b70"; font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace"; font.pixelSize: 10 }
                 }
             }
@@ -72,12 +146,15 @@ ApplicationWindow {
                 objectName: "connectButton"
                 text: station.connected ? "Disconnect" : "Connect Link"
                 onClicked: station.connected ? station.disconnectLink() : station.connectLink()
+                focusPolicy: Qt.NoFocus
             }
             Button { text: "Session Notes"; onClicked: settings.open() }
         }
 
         RowLayout {
             spacing: 12
+            opacity: station.connectionState === "LIVE" ? 1.0 : 0.35
+            Behavior on opacity { NumberAnimation { duration: 200 } }
             Metric { Layout.fillWidth: true; metricIndex: 1; label: "BATTERY VOLTAGE"; value: station.telemetryData.battery.toFixed(2); unit: "V" }
             Metric { Layout.fillWidth: true; metricIndex: 2; label: "ROVER HEADING"; value: (station.telemetryData.heading * 180 / Math.PI).toFixed(0); unit: "deg" }
             Metric { Layout.fillWidth: true; metricIndex: 3; label: "LEFT WHEEL SPD"; value: station.telemetryData.left.toFixed(2); unit: "m/s" }
@@ -110,8 +187,9 @@ ApplicationWindow {
                         objectName: "armButton"
                         Layout.fillWidth: true
                         text: station.armed ? "Disable Drive Link" : "Enable Drive Link"
-                        enabled: station.connected
+                        enabled: station.connectionState === "LIVE"
                         onClicked: station.toggleArm()
+                        focusPolicy: Qt.NoFocus
                     }
                     DrivePad { Layout.fillWidth: true }
                     Item { Layout.fillHeight: true }
@@ -141,4 +219,9 @@ ApplicationWindow {
     }
 
     SettingsPanel { id: settings }
+
+    Connections {
+        target: settings
+        function onClosed() { keyCatcher.forceActiveFocus() }
+    }
 }

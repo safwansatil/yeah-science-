@@ -1,0 +1,56 @@
+[33mcommit 72c87e47196048421ea36569e051d27e2dfcc5a8[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32msection1.1[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m
+Author: safwansatil <asf1k.til@gmail.com>
+Date:   Tue Sep 22 20:53:27 2026 +0300
+
+    fix(ui): align STOP button label, status metric name, 768p height, and set notes popup non-modal
+
+[1mdiff --git a/qml/DrivePad.qml b/qml/DrivePad.qml[m
+[1mindex a25cef7..94a8136 100644[m
+[1m--- a/qml/DrivePad.qml[m
+[1m+++ b/qml/DrivePad.qml[m
+[36m@@ -52,7 +52,7 @@[m [mColumnLayout {[m
+             onCanceled: station.stop()[m
+         }[m
+         Button {[m
+[31m-            text: "✖ E-STOP"[m
+[32m+[m[32m            text: "✖ STOP"[m
+             Layout.preferredWidth: 96[m
+             palette.button: "#e63946"[m
+             palette.buttonText: "#ffffff"[m
+[36m@@ -109,7 +109,7 @@[m [mColumnLayout {[m
+         border.color: "#182330"[m
+         Label {[m
+             anchors.centerIn: parent[m
+[31m-            text: "CMD_PWM: L=" + station.leftCommand.toFixed(2) + " | R=" + station.rightCommand.toFixed(2)[m
+[32m+[m[32m            text: "CMD_SPEED: L=" + station.leftCommand.toFixed(2) + " | R=" + station.rightCommand.toFixed(2)[m
+             color: "#00e676"[m
+             font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace"[m
+             font.pixelSize: 11[m
+[1mdiff --git a/qml/Main.qml b/qml/Main.qml[m
+[1mindex 6c5ce61..55cb07e 100644[m
+[1m--- a/qml/Main.qml[m
+[1m+++ b/qml/Main.qml[m
+[36m@@ -4,8 +4,8 @@[m [mimport QtQuick.Layouts[m
+ [m
+ ApplicationWindow {[m
+     id: root[m
+[31m-    width: 1180; height: 860[m
+[31m-    minimumWidth: 1020; minimumHeight: 820[m
+[32m+[m[32m    width: 1180; height: 740[m
+[32m+[m[32m    minimumWidth: 1020; minimumHeight: 700[m
+     visible: true; color: "#080b10"[m
+     title: "Yeah, Science | Project Altair Ground Control"[m
+     palette.button: "#16202c"[m
+[1mdiff --git a/qml/SettingsPanel.qml b/qml/SettingsPanel.qml[m
+[1mindex 29f6ca7..f209f3a 100644[m
+[1m--- a/qml/SettingsPanel.qml[m
+[1m+++ b/qml/SettingsPanel.qml[m
+[36m@@ -7,7 +7,7 @@[m [mPopup {[m
+     objectName: "settingsPanel"[m
+     anchors.centerIn: parent[m
+     width: 460; height: 300[m
+[31m-    modal: true; focus: true[m
+[32m+[m[32m    modal: false; focus: true[m
+     onOpened: station.stop()[m
+     background: Panel {[m
+         border.color: "#f3c623"[m

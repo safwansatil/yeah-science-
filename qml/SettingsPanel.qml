@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+
 Popup {
     id: settings
     objectName: "settingsPanel"
@@ -9,12 +10,16 @@ Popup {
     width: 460; height: 300
     modal: false; focus: true
     onOpened: station.stop()
+    onClosed: keyCatcher.forceActiveFocus()
+
     background: Panel {
         border.color: "#f3c623"
         border.width: 1
     }
+
     ColumnLayout {
         anchors.fill: parent; anchors.margins: 20; spacing: 12
+
         RowLayout {
             spacing: 8
             Rectangle {
@@ -38,6 +43,7 @@ Popup {
             placeholderText: "What scenario or feature are you testing?"
             palette.base: "#0a0e13"
             palette.text: "#e2e8f0"
+            focusPolicy: Qt.NoFocus
         }
         Label {
             text: "Endpoint: " + station.endpoint + "\nEdit config/local.json and restart to change ports."
@@ -50,6 +56,7 @@ Popup {
             text: "Back to Station"
             Layout.alignment: Qt.AlignRight
             onClicked: settings.close()
+            focusPolicy: Qt.NoFocus
         }
     }
 }
