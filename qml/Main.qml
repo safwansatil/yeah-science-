@@ -14,9 +14,36 @@ ApplicationWindow {
     palette.text: "#dce5ef"
     palette.base: "#0f151d"
     font.family: "Segoe UI"
-    onActiveChanged: if (!active) station.stop()
+    onActiveChanged: {
+        if (!active) {
+            station.stop()
+            station.clearinput()
+        }
+    }
 
     ColumnLayout {
+
+        focus: true
+        Keys.enabled: root.active && station.connected
+                    && station.armed && !settings.visible
+
+        Keys.onPressed: function(event) {
+            if (event.key !== Qt.Key_W && event.key !== Qt.Key_A && event.key !== Qt.Key_S && event.key !== Qt.Key_D && event.key !== Qt.Key_Up && event.key !== Qt.Key_Down && event.key !== Qt.Key_Left && event.key !== Qt.Key_Right)
+                return;
+            event.accepted = true;
+            if (!event.isAutoRepeat)
+                station.pressedkey(event.key);
+        }
+
+        Keys.onReleased: function(event) {
+            if (event.key !== Qt.Key_W && event.key !== Qt.Key_A && event.key !== Qt.Key_S && event.key !== Qt.Key_D && event.key !== Qt.Key_Up && event.key !== Qt.Key_Down && event.key !== Qt.Key_Left && event.key !== Qt.Key_Right)
+                return;
+            event.accepted = true;
+            if (!event.isAutoRepeat)
+                station.releasedkey(event.key);
+        }
+        
+
         anchors.fill: parent; anchors.margins: 18; spacing: 12
         RowLayout {
             spacing: 12
@@ -55,16 +82,41 @@ ApplicationWindow {
             Item { Layout.fillWidth: true }
 
             RowLayout {
+                id: statusRow
                 spacing: 8
+
+                readonly property string statusText: station.connection_status
+                readonly property color statusColor: {
+                    switch (statusText.toLowerCase()) {
+                    case "live":         return "#00e676"
+                    case "stale":        return "#ffb300"
+                    case "waiting":      return "#7a8b9e"
+                    case "disconnected": return "#ff5252"
+                    default:             return "#4a5568"
+                    }
+                }
+
                 Rectangle {
                     width: 8; height: 8; radius: 4
-                    color: station.connected ? "#00e676" : "#4a5568"
+                    color: statusRow.statusColor
                     Layout.alignment: Qt.AlignVCenter
                 }
+
                 ColumnLayout {
                     spacing: 1
-                    Label { text: station.connected ? "CONNECTED" : "DISCONNECTED"; color: station.connected ? "#00e676" : "#7a8b9e"; font.pixelSize: 11; font.bold: true; font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace" }
-                    Label { text: station.endpoint; color: "#485b70"; font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace"; font.pixelSize: 10 }
+                    Label {
+                        text: statusRow.statusText.toUpperCase()
+                        color: statusRow.statusColor
+                        font.pixelSize: 11
+                        font.bold: true
+                        font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace"
+                    }
+                    Label {
+                        text: station.endpoint
+                        color: "#485b70"
+                        font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace"
+                        font.pixelSize: 10
+                    }
                 }
             }
 
