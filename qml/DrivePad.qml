@@ -21,7 +21,7 @@ ColumnLayout {
     }
 
     Label {
-        text: "Hold control pad button to command drive"
+        text: "Hold pad buttons or use WASD / Arrow keys"
         color: "#dce5ef"
         font.pixelSize: 13
         font.bold: true
@@ -38,8 +38,8 @@ ColumnLayout {
             Layout.preferredWidth: 96
             enabled: station.armed
             onPressed: station.setDrive(1, 1)
-            onReleased: station.stop()
-            onCanceled: station.stop()
+            onReleased: station.releaseMouse()
+            onCanceled: station.releaseMouse()
         }
         Item { Layout.preferredWidth: 72 }
 
@@ -48,23 +48,26 @@ ColumnLayout {
             Layout.preferredWidth: 84
             enabled: station.armed
             onPressed: station.setDrive(-1, 1)
-            onReleased: station.stop()
-            onCanceled: station.stop()
+            onReleased: station.releaseMouse()
+            onCanceled: station.releaseMouse()
         }
         Button {
             text: "✖ STOP"
             Layout.preferredWidth: 96
             palette.button: "#e63946"
             palette.buttonText: "#ffffff"
-            onClicked: station.stop()
+            onClicked: {
+                station.clearKeys()
+                station.stop()
+            }
         }
         Button {
             text: "RIGHT  D ▶"
             Layout.preferredWidth: 84
             enabled: station.armed
             onPressed: station.setDrive(1, -1)
-            onReleased: station.stop()
-            onCanceled: station.stop()
+            onReleased: station.releaseMouse()
+            onCanceled: station.releaseMouse()
         }
 
         Item { Layout.preferredWidth: 72 }
@@ -73,8 +76,8 @@ ColumnLayout {
             Layout.preferredWidth: 96
             enabled: station.armed
             onPressed: station.setDrive(-1, -1)
-            onReleased: station.stop()
-            onCanceled: station.stop()
+            onReleased: station.releaseMouse()
+            onCanceled: station.releaseMouse()
         }
         Item { Layout.preferredWidth: 72 }
     }
@@ -119,14 +122,14 @@ ColumnLayout {
 
     Rectangle {
         Layout.fillWidth: true; height: 22
-        color: "#1d170b"
+        color: "#0d2618"
         radius: 2
-        border.color: "#f3c623"
+        border.color: "#00e676"
         border.width: 1
         Label {
             anchors.centerIn: parent
-            text: "[ TASK ] KEYBOARD TELEOP: AWAITING IMPLEMENTATION"
-            color: "#f3c623"
+            text: "[ ACTIVE ] WASD / ARROW KEYS TELEOP ENABLED"
+            color: "#00e676"
             font.pixelSize: 9
             font.bold: true
             font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace"
