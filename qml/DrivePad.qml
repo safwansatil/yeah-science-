@@ -56,7 +56,7 @@ ColumnLayout {
             Layout.preferredWidth: 96
             palette.button: "#e63946"
             palette.buttonText: "#ffffff"
-            onClicked: station.stop()
+            onClicked: { station.clearKeyboard(); station.stop(); }
         }
         Button {
             text: "RIGHT  D ▶"
@@ -119,14 +119,14 @@ ColumnLayout {
 
     Rectangle {
         Layout.fillWidth: true; height: 22
-        color: "#1d170b"
+        color: "#0d2618"
         radius: 2
-        border.color: "#f3c623"
+        border.color: "#00e676"
         border.width: 1
         Label {
             anchors.centerIn: parent
-            text: "[ TASK ] KEYBOARD TELEOP: AWAITING IMPLEMENTATION"
-            color: "#f3c623"
+            text: "[ ACTIVE ] KEYBOARD TELEOP: WASD & ARROWS ACTIVE"
+            color: "#00e676"
             font.pixelSize: 9
             font.bold: true
             font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace"

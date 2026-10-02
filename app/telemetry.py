@@ -13,3 +13,14 @@ class TelemetryStore:
         self.values = {key: packet[key] for key in self.values}
         self.received_at = time.monotonic()
         self.sequence = packet["seq"]
+
+    def is_stale(self, timeout_sec=1.0):
+        if self.received_at is None:
+            return True
+        return (time.monotonic() - self.received_at) > timeout_sec
+
+    def reset(self):
+        self.values = {"x": 0.0, "y": 0.0, "heading": 0.0, "left": 0.0,
+                       "right": 0.0, "battery": 0.0, "failsafe": True}
+        self.received_at = None
+        self.sequence = None

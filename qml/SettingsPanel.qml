@@ -8,7 +8,8 @@ Popup {
     anchors.centerIn: parent
     width: 460; height: 300
     modal: false; focus: true
-    onOpened: station.stop()
+    onOpened: { station.clearKeyboard(); station.stop(); }
+    onClosed: { station.clearKeyboard(); station.stop(); }
     background: Panel {
         border.color: "#f3c623"
         border.width: 1
