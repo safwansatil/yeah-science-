@@ -76,3 +76,36 @@ class StationTests(unittest.TestCase):
         self.station.tick()
         self.assertEqual(self.station.invalidPackets, 1)
         self.assertIsNone(self.station.telemetry.received_at)
+        self.assertEqual(self.station.connection_status, "Waiting")
+    def test_no_reply_stays_waiting(self):
+        self.assertEqual(self.station.invalidPackets, 0)
+        self.assertIsNone(self.station.telemetry.received_at)
+        self.assertEqual(self.station.connection_status, "Waiting")
+
+    def test_dropout_becomes_stale_then_recovers(self):
+        with patch("app.telemetry.time.monotonic", return_value=0.0) as clock:
+            self.station.link.incoming = [encode(
+                "telemetry", 1, x=3, y=1, heading=0,
+                left=0, right=0, battery=12.4, failsafe=True)]
+            self.station.tick()
+            self.assertEqual(self.station.connection_status, "Live")
+
+            threshold_seconds = self.station.stale_after_ms / 1000
+            clock.return_value = threshold_seconds / 2
+            self.station.tick()
+            self.assertEqual(self.station.connection_status, "Live")
+
+            clock.return_value = threshold_seconds
+            self.station.tick()
+            self.assertEqual(self.station.connection_status, "Stale")
+            self.assertEqual(self.station.telemetry.received_at, 0.0)
+            self.assertEqual(self.station.telemetryData["x"], 3)
+
+            clock.return_value = threshold_seconds + 4
+            self.station.link.incoming = [encode(
+                "telemetry", 2, x=4, y=1, heading=0,
+                left=0, right=0, battery=12.3, failsafe=True)]
+            self.station.tick()
+            self.assertEqual(self.station.connection_status, "Live")
+            self.assertEqual(self.station.telemetry.received_at, clock.return_value)
+            self.assertEqual(self.station.telemetryData["x"], 4)

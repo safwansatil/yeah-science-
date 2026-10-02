@@ -5,6 +5,8 @@ import QtQuick.Layouts
 ColumnLayout {
     spacing: 8
 
+    
+
     RowLayout {
         spacing: 6
         Rectangle {
@@ -31,15 +33,27 @@ ColumnLayout {
         columns: 3
         rowSpacing: 6; columnSpacing: 6
 
+        
+
         Item { Layout.preferredWidth: 72 }
         Button {
             objectName: "forwardButton"
             text: "▲ W  FWD"
             Layout.preferredWidth: 96
             enabled: station.armed
-            onPressed: station.setDrive(1, 1)
-            onReleased: station.stop()
-            onCanceled: station.stop()
+            onPressed: {
+                if (!station.keyboard_pressed)
+                    station.setDrive(1, 1)
+            }
+            onReleased: {
+                if (!station.keyboard_pressed)
+                    station.stop()
+            }
+            onCanceled: {
+                if (!station.keyboard_pressed)
+                    station.stop()
+            }
+                
         }
         Item { Layout.preferredWidth: 72 }
 
@@ -47,24 +61,45 @@ ColumnLayout {
             text: "◀ A  LEFT"
             Layout.preferredWidth: 84
             enabled: station.armed
-            onPressed: station.setDrive(-1, 1)
-            onReleased: station.stop()
-            onCanceled: station.stop()
+            onPressed: {
+                if (!station.keyboard_pressed)
+                    station.setDrive(-1, 1)
+            }
+            onReleased: {
+                if (!station.keyboard_pressed)
+                    station.stop()
+            }
+            onCanceled: {
+                if (!station.keyboard_pressed)
+                    station.stop()
+            }   
         }
         Button {
             text: "✖ STOP"
             Layout.preferredWidth: 96
             palette.button: "#e63946"
             palette.buttonText: "#ffffff"
-            onClicked: station.stop()
+            onClicked: {
+                station.stop()
+                station.clearinput()
+            }
         }
         Button {
             text: "RIGHT  D ▶"
             Layout.preferredWidth: 84
             enabled: station.armed
-            onPressed: station.setDrive(1, -1)
-            onReleased: station.stop()
-            onCanceled: station.stop()
+            onPressed: {
+                if (!station.keyboard_pressed)
+                    station.setDrive(1, -1)
+            }
+            onReleased: {
+                if (!station.keyboard_pressed)
+                    station.stop()
+            }
+            onCanceled: {
+                if (!station.keyboard_pressed)
+                    station.stop()
+            }
         }
 
         Item { Layout.preferredWidth: 72 }
@@ -72,9 +107,18 @@ ColumnLayout {
             text: "▼ S  REV"
             Layout.preferredWidth: 96
             enabled: station.armed
-            onPressed: station.setDrive(-1, -1)
-            onReleased: station.stop()
-            onCanceled: station.stop()
+            onPressed: {
+                if (!station.keyboard_pressed)
+                    station.setDrive(-1, -1)
+            }
+            onReleased: {
+                if (!station.keyboard_pressed)
+                    station.stop()
+            }
+            onCanceled: {
+                if (!station.keyboard_pressed)
+                    station.stop()
+            }
         }
         Item { Layout.preferredWidth: 72 }
     }
