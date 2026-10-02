@@ -8,3 +8,6 @@ dist/
 .idea/
 .DS_Store
 config/local.json
+
+# generated runtime logs
+runtime/*.log
