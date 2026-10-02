@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 ColumnLayout {
+    signal stopRequested()
     spacing: 8
 
     RowLayout {
@@ -56,7 +57,7 @@ ColumnLayout {
             Layout.preferredWidth: 96
             palette.button: "#e63946"
             palette.buttonText: "#ffffff"
-            onClicked: station.stop()
+            onClicked: { stopRequested(); station.stop() }
         }
         Button {
             text: "RIGHT  D ▶"

@@ -7,6 +7,128 @@ ApplicationWindow {
     width: 1180; height: 740
     minimumWidth: 1020; minimumHeight: 700
     visible: true; color: "#080b10"
+    property bool keyW: false
+    property bool keyA: false
+    property bool keyS: false
+    property bool keyD: false
+    property bool keyUp: false
+    property bool keyLeft: false
+    property bool keyDown: false
+    property bool keyRight: false
+    property var blockedKeys: ({})
+
+    function clearKeyboard() {
+        blockedKeys = {}
+        if (keyW) blockedKeys[Qt.Key_W] = true
+        if (keyA) blockedKeys[Qt.Key_A] = true
+        if (keyS) blockedKeys[Qt.Key_S] = true
+        if (keyD) blockedKeys[Qt.Key_D] = true
+        if (keyUp) blockedKeys[Qt.Key_Up] = true
+        if (keyLeft) blockedKeys[Qt.Key_Left] = true
+        if (keyDown) blockedKeys[Qt.Key_Down] = true
+        if (keyRight) blockedKeys[Qt.Key_Right] = true
+
+        keyW = false
+        keyA = false
+        keyS = false
+        keyD = false
+        keyUp = false
+        keyLeft = false
+        keyDown = false
+        keyRight = false
+        station.stop()
+    }
+
+    function applyKeyboard() {
+        if (settings.visible || !station.connected || !station.armed)
+            return
+
+        var forward = (keyW || keyUp ? 1 : 0) - (keyS || keyDown ? 1 : 0)
+        var turn = (keyD || keyRight ? 1 : 0) - (keyA || keyLeft ? 1 : 0)
+
+        if (forward === 0 && turn === 0) {
+            station.stop()
+            return
+        }
+
+        station.setDrive(
+            Math.max(-1, Math.min(1, forward + turn)),
+            Math.max(-1, Math.min(1, forward - turn))
+        )
+    }
+
+    function setKey(key, pressed) {
+        if (settings.visible || !station.connected || !station.armed)
+            return
+
+        if (blockedKeys[key]) {
+            if (!pressed)
+                delete blockedKeys[key]
+            return
+        }
+
+        if (key === Qt.Key_W) keyW = pressed
+        else if (key === Qt.Key_A) keyA = pressed
+        else if (key === Qt.Key_S) keyS = pressed
+        else if (key === Qt.Key_D) keyD = pressed
+        else if (key === Qt.Key_Up) keyUp = pressed
+        else if (key === Qt.Key_Left) keyLeft = pressed
+        else if (key === Qt.Key_Down) keyDown = pressed
+        else if (key === Qt.Key_Right) keyRight = pressed
+
+        applyKeyboard()
+    }
+
+    Item {
+        id: keyboardFocus
+        width: 1
+        height: 1
+        focus: true
+
+        Component.onCompleted: forceActiveFocus()
+
+        Keys.onPressed: function(event) {
+            if (settings.visible)
+                return
+
+            if (event.isAutoRepeat) {
+                event.accepted = true
+                return
+            }
+
+            if ([Qt.Key_W, Qt.Key_A, Qt.Key_S, Qt.Key_D,
+                 Qt.Key_Up, Qt.Key_Left, Qt.Key_Down, Qt.Key_Right].indexOf(event.key) >= 0) {
+                setKey(event.key, true)
+                event.accepted = true
+            }
+        }
+
+        Keys.onReleased: function(event) {
+            if (event.isAutoRepeat) {
+                event.accepted = true
+                return
+            }
+
+            if ([Qt.Key_W, Qt.Key_A, Qt.Key_S, Qt.Key_D,
+                 Qt.Key_Up, Qt.Key_Left, Qt.Key_Down, Qt.Key_Right].indexOf(event.key) >= 0) {
+                setKey(event.key, false)
+                event.accepted = true
+            }
+        }
+    }
+
+    Timer {
+        id: keyboardDriveTimer
+        interval: 50
+        repeat: true
+        running: true
+        onTriggered: {
+            if (keyW || keyA || keyS || keyD ||
+                keyUp || keyLeft || keyDown || keyRight)
+                applyKeyboard()
+        }
+    }
+
     title: "Yeah, Science | Project Altair Ground Control"
     palette.button: "#16202c"
     palette.buttonText: "#dce5ef"
@@ -14,7 +136,13 @@ ApplicationWindow {
     palette.text: "#dce5ef"
     palette.base: "#0f151d"
     font.family: "Segoe UI"
-    onActiveChanged: if (!active) station.stop()
+    onActiveChanged: {
+        clearKeyboard()
+        if (!active)
+            station.stop()
+        else
+            keyboardFocus.forceActiveFocus()
+    }
 
     ColumnLayout {
         anchors.fill: parent; anchors.margins: 18; spacing: 12
@@ -58,12 +186,22 @@ ApplicationWindow {
                 spacing: 8
                 Rectangle {
                     width: 8; height: 8; radius: 4
-                    color: station.connected ? "#00e676" : "#4a5568"
+                    color: station.telemetryState === "LIVE" ? "#00e676" :
+                           station.telemetryState === "STALE" ? "#f3c623" :
+                           station.telemetryState === "WAITING" ? "#5dade2" : "#4a5568"
                     Layout.alignment: Qt.AlignVCenter
                 }
                 ColumnLayout {
                     spacing: 1
-                    Label { text: station.connected ? "CONNECTED" : "DISCONNECTED"; color: station.connected ? "#00e676" : "#7a8b9e"; font.pixelSize: 11; font.bold: true; font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace" }
+                    Label {
+                        text: station.telemetryState
+                        color: station.telemetryState === "LIVE" ? "#00e676" :
+                               station.telemetryState === "STALE" ? "#f3c623" :
+                               station.telemetryState === "WAITING" ? "#5dade2" : "#7a8b9e"
+                        font.pixelSize: 11
+                        font.bold: true
+                        font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace"
+                    }
                     Label { text: station.endpoint; color: "#485b70"; font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace"; font.pixelSize: 10 }
                 }
             }
@@ -71,9 +209,9 @@ ApplicationWindow {
             Button {
                 objectName: "connectButton"
                 text: station.connected ? "Disconnect" : "Connect Link"
-                onClicked: station.connected ? station.disconnectLink() : station.connectLink()
+                onClicked: { station.connected ? station.disconnectLink() : station.connectLink(); keyboardFocus.forceActiveFocus() }
             }
-            Button { text: "Session Notes"; onClicked: settings.open() }
+            Button { text: "Session Notes"; onClicked: { clearKeyboard(); station.stop(); settings.open() } }
         }
 
         RowLayout {
@@ -111,9 +249,17 @@ ApplicationWindow {
                         Layout.fillWidth: true
                         text: station.armed ? "Disable Drive Link" : "Enable Drive Link"
                         enabled: station.connected
-                        onClicked: station.toggleArm()
+                        onClicked: { station.toggleArm(); keyboardFocus.forceActiveFocus() }
                     }
-                    DrivePad { Layout.fillWidth: true }
+                    DrivePad {
+                        id: drivePad
+                        Layout.fillWidth: true
+                        onStopRequested: {
+                            clearKeyboard()
+                            station.stop()
+                            keyboardFocus.forceActiveFocus()
+                        }
+                    }
                     Item { Layout.fillHeight: true }
                     Label {
                         text: "Watchdog: " + (station.telemetryData.failsafe ? "holding stop" : "receiving commands")

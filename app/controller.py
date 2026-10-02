@@ -39,6 +39,7 @@ class Station(QObject):
         self.note("Station ready. Start the simulator, then connect.")
 
     connected = Property(bool, lambda self: self._online, notify=changed)
+    telemetryState = Property(str, lambda self: self.telemetry_state(), notify=changed)
     armed = Property(bool, lambda self: self._armed, notify=changed)
     telemetryData = Property("QVariantMap", lambda self: self.telemetry.values, notify=changed)
     eventLines = Property("QStringList", lambda self: self._events, notify=eventsChanged)
@@ -49,6 +50,16 @@ class Station(QObject):
     txBytes = Property(int, lambda self: self.link.tx, notify=changed)
     invalidPackets = Property(int, lambda self: self._invalid, notify=changed)
     endpoint = Property(str, lambda self: f"127.0.0.1:{self.config['rover_port']}", constant=True)
+
+    def telemetry_state(self):
+        if not self._online:
+            return "DISCONNECTED"
+        if self.telemetry.received_at is None:
+            return "WAITING"
+        age_ms = (time.monotonic() - self.telemetry.received_at) * 1000
+        if age_ms > self.config["stale_after_ms"]:
+            return "STALE"
+        return "LIVE"
 
     def note(self, message, warning=False):
         (log.warning if warning else log.info)(message)
@@ -61,6 +72,8 @@ class Station(QObject):
             return
         try:
             self.link.open()
+            self.telemetry.received_at = None
+            self.telemetry.sequence = None
             self._online = True
             self.link.send(encode("hello", self._seq))
             self._seq += 1
@@ -149,7 +162,12 @@ class Station(QObject):
                     if first:
                         self.note("First rover telemetry received")
             if self._armed:
-                self._send_drive()
+                if self.telemetry_state() == "STALE":
+                    self._left = self._right = 0.0
+                    self._armed = False
+                    self.note("Telemetry stale; drive disabled", True)
+                else:
+                    self._send_drive()
         self.changed.emit()
 
     @Slot()

@@ -76,3 +76,16 @@ class StationTests(unittest.TestCase):
         self.station.tick()
         self.assertEqual(self.station.invalidPackets, 1)
         self.assertIsNone(self.station.telemetry.received_at)
+
+    def test_stale_telemetry_disables_drive(self):
+        self.station.toggleArm()
+        self.station.setDrive(1, 1)
+        self.assertTrue(self.station.armed)
+
+        self.station.telemetry.received_at = 0
+        self.station.tick()
+
+        self.assertEqual(self.station.telemetryState, "STALE")
+        self.assertFalse(self.station.armed)
+        self.assertEqual(self.station.leftCommand, 0)
+        self.assertEqual(self.station.rightCommand, 0)
