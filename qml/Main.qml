@@ -18,6 +18,42 @@ ApplicationWindow {
 
     ColumnLayout {
         anchors.fill: parent; anchors.margins: 18; spacing: 12
+        focus: true
+        property var held: ({})
+
+         function isHeld(a, b) { return held[a] === true || held[b] === true }
+        function clamp(v) { return Math.max(-1, Math.min(1, v)) }
+        function isDriveKey(k) {
+            return k === Qt.Key_W || k === Qt.Key_Up || k === Qt.Key_S || k === Qt.Key_Down
+                || k === Qt.Key_A || k === Qt.Key_Left || k === Qt.Key_D || k === Qt.Key_Right
+        }
+
+        function updateDrive() {
+            var fwd  = isHeld(Qt.Key_W, Qt.Key_Up) ? 1 : 0
+            var back = isHeld(Qt.Key_S, Qt.Key_Down) ? 1 : 0
+            var rt   = isHeld(Qt.Key_D, Qt.Key_Right) ? 1 : 0
+            var lt   = isHeld(Qt.Key_A, Qt.Key_Left) ? 1 : 0
+
+            var throttle = fwd - back      // W+S cancel to 0
+            var turn = rt - lt             // A+D cancel to 0
+
+            if (throttle === 0 && turn === 0) { station.stop(); return }
+            station.setDrive(clamp(throttle + turn), clamp(throttle - turn))
+        }
+
+        Keys.onPressed: (event) => {
+            if (event.isAutoRepeat || !isDriveKey(event.key)) return
+            held[event.key] = true
+            updateDrive()
+            event.accepted = true
+        }
+        Keys.onReleased: (event) => {
+            if (event.isAutoRepeat || !isDriveKey(event.key)) return
+            delete held[event.key]
+            updateDrive()
+            event.accepted = true
+        }
+
         RowLayout {
             spacing: 12
             RowLayout {
