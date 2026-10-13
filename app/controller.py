@@ -32,6 +32,7 @@ class Station(QObject):
         self._seq = 0
         self._events = []
         self._invalid = 0
+        self._last_state = "disconnected"
         self._timer = QTimer(self)
         self._timer.setInterval(config["send_period_ms"])
         self._timer.timeout.connect(self.tick)
@@ -50,6 +51,16 @@ class Station(QObject):
     invalidPackets = Property(int, lambda self: self._invalid, notify=changed)
     endpoint = Property(str, lambda self: f"127.0.0.1:{self.config['rover_port']}", constant=True)
 
+    def link_state(self):
+        if not self._online:
+            return "disconnected"
+        age = self.telemetry.age_ms()
+        if age is None:
+            return "waiting"
+        return "stale" if age > self.config["stale_after_ms"] else "live"
+
+    linkState = Property(str, lambda self: self.link_state(), notify=changed)
+    
     def note(self, message, warning=False):
         (log.warning if warning else log.info)(message)
         self._events = (self._events + [time.strftime("%H:%M:%S") + "  " + message])[-80:]
@@ -77,6 +88,8 @@ class Station(QObject):
         self._armed = False
         self.link.close()
         self._online = False
+        self.telemetry = TelemetryStore()
+        self._last_state = "disconnected"
         self.note("Datalink closed")
         self.changed.emit()
 
@@ -150,6 +163,15 @@ class Station(QObject):
                         self.note("First rover telemetry received")
             if self._armed:
                 self._send_drive()
+        state = self.link_state()
+        if state != self._last_state:
+            if state == "stale":
+                self.note("Telemetry stale: rover not replying. Drive disabled.", True)
+                self.stop()
+                self._armed = False
+            elif state == "live" and self._last_state == "stale":
+                self.note("Telemetry recovered. Re-enable drive to move.")
+            self._last_state = state
         self.changed.emit()
 
     @Slot()

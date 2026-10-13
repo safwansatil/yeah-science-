@@ -92,6 +92,7 @@ Panel {
     // Animated/Positioned Rover Asset with Reticle Corner Brackets
     Item {
         id: rover
+        opacity: station.linkState === "live" ? 1 : (station.linkState === "stale" ? 0.3 : 0)
         width: 64; height: 50
         x: field.width / 2 + field.readings.x * 36 - width / 2
         y: field.height / 2 - field.readings.y * 36 - height / 2
@@ -156,6 +157,7 @@ Panel {
     // Footnote Pose Coordinates Banner
     Label {
         anchors { bottom: parent.bottom; left: parent.left; margins: 12 }
+        visible: station.linkState === "live"
         text: "POSE: X=" + field.readings.x.toFixed(2) + "m  Y=" + field.readings.y.toFixed(2) + "m  HDG=" + (field.readings.heading * 180 / Math.PI).toFixed(1) + "°"
         color: "#7a8b9e"
         font.pixelSize: 10

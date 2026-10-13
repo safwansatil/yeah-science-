@@ -16,12 +16,16 @@ ApplicationWindow {
     font.family: "Segoe UI"
     onActiveChanged: if (!active) station.stop()
 
+    function stateColor(s) {
+        return s === "live" ? "#00e676" : s === "stale" ? "#e63946" : s === "waiting" ? "#f3c623" : "#7a8b9e"
+    }
+
     ColumnLayout {
         anchors.fill: parent; anchors.margins: 18; spacing: 12
         focus: true
         property var held: ({})
 
-         function isHeld(a, b) { return held[a] === true || held[b] === true }
+        function isHeld(a, b) { return held[a] === true || held[b] === true }
         function clamp(v) { return Math.max(-1, Math.min(1, v)) }
         function isDriveKey(k) {
             return k === Qt.Key_W || k === Qt.Key_Up || k === Qt.Key_S || k === Qt.Key_Down
@@ -94,12 +98,12 @@ ApplicationWindow {
                 spacing: 8
                 Rectangle {
                     width: 8; height: 8; radius: 4
-                    color: station.connected ? "#00e676" : "#4a5568"
                     Layout.alignment: Qt.AlignVCenter
+                    color: stateColor(station.linkState)
                 }
                 ColumnLayout {
                     spacing: 1
-                    Label { text: station.connected ? "CONNECTED" : "DISCONNECTED"; color: station.connected ? "#00e676" : "#7a8b9e"; font.pixelSize: 11; font.bold: true; font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace" }
+                    Label { text: station.linkState.toUpperCase(); color: stateColor(station.linkState); font.pixelSize: 11; font.bold: true; font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace" }
                     Label { text: station.endpoint; color: "#485b70"; font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace"; font.pixelSize: 10 }
                 }
             }
@@ -114,10 +118,10 @@ ApplicationWindow {
 
         RowLayout {
             spacing: 12
-            Metric { Layout.fillWidth: true; metricIndex: 1; label: "BATTERY VOLTAGE"; value: station.telemetryData.battery.toFixed(2); unit: "V" }
-            Metric { Layout.fillWidth: true; metricIndex: 2; label: "ROVER HEADING"; value: (station.telemetryData.heading * 180 / Math.PI).toFixed(0); unit: "deg" }
-            Metric { Layout.fillWidth: true; metricIndex: 3; label: "LEFT WHEEL SPD"; value: station.telemetryData.left.toFixed(2); unit: "m/s" }
-            Metric { Layout.fillWidth: true; metricIndex: 4; label: "RIGHT WHEEL SPD"; value: station.telemetryData.right.toFixed(2); unit: "m/s" }
+            Metric { Layout.fillWidth: true; metricIndex: 1; label: "BATTERY VOLTAGE"; value: station.linkState === "live" ? station.telemetryData.battery.toFixed(2) : "--"; unit: "V" }
+            Metric { Layout.fillWidth: true; metricIndex: 2; label: "ROVER HEADING"; value: station.linkState === "live" ? (station.telemetryData.heading * 180 / Math.PI).toFixed(0) : "--"; unit: "deg" }
+            Metric { Layout.fillWidth: true; metricIndex: 3; label: "LEFT WHEEL SPD"; value: station.linkState === "live" ? station.telemetryData.left.toFixed(2) : "--"; unit: "m/s"}
+            Metric { Layout.fillWidth: true; metricIndex: 4; label: "RIGHT WHEEL SPD"; value: station.linkState === "live" ? station.telemetryData.right.toFixed(2) : "--"; unit: "m/s" }
         }
 
         RowLayout {

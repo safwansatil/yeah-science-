@@ -13,3 +13,8 @@ class TelemetryStore:
         self.values = {key: packet[key] for key in self.values}
         self.received_at = time.monotonic()
         self.sequence = packet["seq"]
+
+    def age_ms(self):
+        if self.received_at is None:
+            return None
+        return (time.monotonic() - self.received_at) * 1000
