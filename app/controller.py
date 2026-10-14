@@ -1,13 +1,10 @@
-"""Station coordinator. Input, transport and display state meet here.
+"""Station coordinator. Input, transport and display state meet here."""
 
-This class has grown with the UI; there is room to separate responsibilities
-when someone next changes it. Keep the mouse controls working while doing so.
-"""
 import logging
 import math
 import time
 
-from PySide6.QtCore import QObject, Property, QTimer, Signal, Slot
+from PySide6.QtCore import Property, QObject, QTimer, Signal, Slot
 
 from app.telemetry import TelemetryStore
 from link.packets import decode, encode
@@ -19,6 +16,12 @@ log = logging.getLogger("station")
 class Station(QObject):
     changed = Signal()
     eventsChanged = Signal()
+
+    FORWARD_KEYS = {"w", "up"}
+    REVERSE_KEYS = {"s", "down"}
+    LEFT_KEYS = {"a", "left"}
+    RIGHT_KEYS = {"d", "right"}
+    MOVEMENT_KEYS = FORWARD_KEYS | REVERSE_KEYS | LEFT_KEYS | RIGHT_KEYS
 
     def __init__(self, config, parent=None):
         super().__init__(parent)
@@ -32,12 +35,32 @@ class Station(QObject):
         self._seq = 0
         self._events = []
         self._invalid = 0
+
+        self._stale_timeout = config.get("stale_after_ms", 1000) / 1000.0
+        self._last_telemetry_time = None
+        self._had_telemetry = False
+
+        self._active_keys = set()
+        self._mouse_active = False
+
         self._timer = QTimer(self)
         self._timer.setInterval(config["send_period_ms"])
         self._timer.timeout.connect(self.tick)
         self._timer.start()
         self.note("Station ready. Start the simulator, then connect.")
 
+    @property
+    def connection_state(self):
+        if not self._online:
+            return "disconnected"
+        if self._last_telemetry_time is None:
+            return "waiting"
+        if time.monotonic() - self._last_telemetry_time > self._stale_timeout:
+            return "stale"
+        return "live"
+
+    connectionState = Property(str, lambda self: self.connection_state, notify=changed)
+    isLive = Property(bool, lambda self: self.connection_state == "live", notify=changed)
     connected = Property(bool, lambda self: self._online, notify=changed)
     armed = Property(bool, lambda self: self._armed, notify=changed)
     telemetryData = Property("QVariantMap", lambda self: self.telemetry.values, notify=changed)
@@ -62,6 +85,8 @@ class Station(QObject):
         try:
             self.link.open()
             self._online = True
+            self._last_telemetry_time = None
+            self._had_telemetry = False
             self.link.send(encode("hello", self._seq))
             self._seq += 1
             self.note("Datalink opened on port " + str(self.config["station_port"]))
@@ -73,10 +98,13 @@ class Station(QObject):
 
     @Slot()
     def disconnectLink(self):
+        self.clearKeys()
         self.stop()
         self._armed = False
         self.link.close()
         self._online = False
+        self._last_telemetry_time = None
+        self._had_telemetry = False
         self.note("Datalink closed")
         self.changed.emit()
 
@@ -85,6 +113,7 @@ class Station(QObject):
         if not self._online:
             self.note("Connect before enabling drive", True)
             return
+        self.clearKeys()
         self.stop()
         self._armed = not self._armed
         self.note("Drive enabled" if self._armed else "Drive disabled")
@@ -98,12 +127,87 @@ class Station(QObject):
 
     @Slot(float, float)
     def setDrive(self, left, right):
+        self._mouse_active = True
         if not self._armed or not self._online:
             return
         if not (math.isfinite(left) and math.isfinite(right)):
             return
         self._left = max(-1.0, min(1.0, left)) * self._speed
         self._right = max(-1.0, min(1.0, right)) * self._speed
+        self._send_drive()
+        self.changed.emit()
+
+    @Slot()
+    def releaseMouse(self):
+        self._mouse_active = False
+        if self._active_keys:
+            self._recompute_keyboard_drive()
+        else:
+            self.stop()
+
+    @Slot(str, result=bool)
+    def handleKeyPress(self, key_name):
+        key = key_name.lower()
+        if key not in self.MOVEMENT_KEYS:
+            return False
+        self._active_keys.add(key)
+        if not self._mouse_active:
+            self._recompute_keyboard_drive()
+        return True
+
+    @Slot(str, result=bool)
+    def handleKeyRelease(self, key_name):
+        key = key_name.lower()
+        if key in self._active_keys:
+            self._active_keys.remove(key)
+            if not self._mouse_active:
+                self._recompute_keyboard_drive()
+            return True
+        return False
+
+    @Slot()
+    def clearKeys(self):
+        self._active_keys.clear()
+        self._mouse_active = False
+        if self._armed:
+            self.stop()
+
+    def _recompute_keyboard_drive(self):
+        if not self._armed or not self._online:
+            return
+
+        if not any(k in self._active_keys for k in self.MOVEMENT_KEYS):
+            self.stop()
+            return
+
+        fwd = 1 if any(k in self._active_keys for k in self.FORWARD_KEYS) else 0
+        rev = 1 if any(k in self._active_keys for k in self.REVERSE_KEYS) else 0
+        linear = fwd - rev
+
+        left = 1 if any(k in self._active_keys for k in self.LEFT_KEYS) else 0
+        right = 1 if any(k in self._active_keys for k in self.RIGHT_KEYS) else 0
+        angular = left - right
+
+        if linear == 0 and angular == 0:
+            self.stop()
+            return
+
+        if linear != 0 and angular != 0:
+            if linear > 0:
+                l_drive = 0.0 if angular > 0 else 1.0
+                r_drive = 1.0 if angular > 0 else 0.0
+            else:
+                l_drive = 0.0 if angular > 0 else -1.0
+                r_drive = -1.0 if angular > 0 else 0.0
+        elif linear != 0:
+            l_drive = float(linear)
+            r_drive = float(linear)
+        else:
+            l_drive = -float(angular)
+            r_drive = float(angular)
+
+        self._left = l_drive * self._speed
+        self._right = r_drive * self._speed
         self._send_drive()
         self.changed.emit()
 
@@ -128,6 +232,9 @@ class Station(QObject):
 
     @Slot()
     def tick(self):
+        now = time.monotonic()
+        prev_state = self.connection_state
+
         if self._online:
             try:
                 packets = self.link.receive()
@@ -135,6 +242,7 @@ class Station(QObject):
                 self.note("Receive failed: " + str(exc), True)
                 self.disconnectLink()
                 return
+
             for raw in packets:
                 try:
                     packet = decode(raw)
@@ -143,13 +251,24 @@ class Station(QObject):
                     if self._invalid == 1 or self._invalid % 20 == 0:
                         self.note(f"Dropped malformed packet (total {self._invalid})", True)
                     continue
-                if packet["type"] == "telemetry":
-                    first = self.telemetry.received_at is None
+
+                if packet.get("type") == "telemetry":
+                    first = self._last_telemetry_time is None
+                    self._last_telemetry_time = now
+                    self._had_telemetry = True
                     self.telemetry.update(packet)
                     if first:
                         self.note("First rover telemetry received")
-            if self._armed:
+
+            curr_state = self.connection_state
+            if curr_state != "live" and (self._left != 0.0 or self._right != 0.0 or self._active_keys):
+                self.note(f"Telemetry not live (state: {curr_state}). Drive halted.", True)
+                self.clearKeys()
+                self.stop()
+
+            if self._armed and curr_state == "live":
                 self._send_drive()
+
         self.changed.emit()
 
     @Slot()

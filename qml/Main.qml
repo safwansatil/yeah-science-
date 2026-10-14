@@ -14,7 +14,44 @@ ApplicationWindow {
     palette.text: "#dce5ef"
     palette.base: "#0f151d"
     font.family: "Segoe UI"
-    onActiveChanged: if (!active) station.stop()
+    focus: true
+
+    onActiveChanged: {
+        if (!active) {
+            station.stop();
+            station.clearKeys();
+        }
+    }
+
+    // Keyboard driving event loop (WASD and Arrow keys)
+    Keys.onPressed: (event) => {
+        if (event.isAutoRepeat) return;
+        if (settings.visible) return;
+        var keyMap = {
+            16777235: "up", 87: "w",
+            16777237: "down", 83: "s",
+            16777234: "left", 65: "a",
+            16777236: "right", 68: "d"
+        };
+        var k = keyMap[event.key];
+        if (k && station.handleKeyPress(k)) {
+            event.accepted = true;
+        }
+    }
+
+    Keys.onReleased: (event) => {
+        if (event.isAutoRepeat) return;
+        var keyMap = {
+            16777235: "up", 87: "w",
+            16777237: "down", 83: "s",
+            16777234: "left", 65: "a",
+            16777236: "right", 68: "d"
+        };
+        var k = keyMap[event.key];
+        if (k && station.handleKeyRelease(k)) {
+            event.accepted = true;
+        }
+    }
 
     ColumnLayout {
         anchors.fill: parent; anchors.margins: 18; spacing: 12
@@ -58,12 +95,31 @@ ApplicationWindow {
                 spacing: 8
                 Rectangle {
                     width: 8; height: 8; radius: 4
-                    color: station.connected ? "#00e676" : "#4a5568"
+                    color: {
+                        if (station.connectionState === "live") return "#00e676";
+                        if (station.connectionState === "stale") return "#ff9800";
+                        if (station.connectionState === "waiting") return "#f3c623";
+                        return "#4a5568";
+                    }
                     Layout.alignment: Qt.AlignVCenter
                 }
                 ColumnLayout {
                     spacing: 1
-                    Label { text: station.connected ? "CONNECTED" : "DISCONNECTED"; color: station.connected ? "#00e676" : "#7a8b9e"; font.pixelSize: 11; font.bold: true; font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace" }
+                    Label {
+                        text: {
+                            if (station.connectionState === "live") return "LIVE TELEMETRY";
+                            if (station.connectionState === "stale") return "STALE TELEMETRY";
+                            if (station.connectionState === "waiting") return "WAITING FOR ROVER";
+                            return "DISCONNECTED";
+                        }
+                        color: {
+                            if (station.connectionState === "live") return "#00e676";
+                            if (station.connectionState === "stale") return "#ff9800";
+                            if (station.connectionState === "waiting") return "#f3c623";
+                            return "#7a8b9e";
+                        }
+                        font.pixelSize: 11; font.bold: true; font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace"
+                    }
                     Label { text: station.endpoint; color: "#485b70"; font.family: Qt.platform.os === "windows" ? "Consolas" : "monospace"; font.pixelSize: 10 }
                 }
             }
@@ -73,15 +129,22 @@ ApplicationWindow {
                 text: station.connected ? "Disconnect" : "Connect Link"
                 onClicked: station.connected ? station.disconnectLink() : station.connectLink()
             }
-            Button { text: "Session Notes"; onClicked: settings.open() }
+            Button {
+                text: "Session Notes"
+                onClicked: {
+                    station.clearKeys();
+                    station.stop();
+                    settings.open();
+                }
+            }
         }
 
         RowLayout {
             spacing: 12
-            Metric { Layout.fillWidth: true; metricIndex: 1; label: "BATTERY VOLTAGE"; value: station.telemetryData.battery.toFixed(2); unit: "V" }
-            Metric { Layout.fillWidth: true; metricIndex: 2; label: "ROVER HEADING"; value: (station.telemetryData.heading * 180 / Math.PI).toFixed(0); unit: "deg" }
-            Metric { Layout.fillWidth: true; metricIndex: 3; label: "LEFT WHEEL SPD"; value: station.telemetryData.left.toFixed(2); unit: "m/s" }
-            Metric { Layout.fillWidth: true; metricIndex: 4; label: "RIGHT WHEEL SPD"; value: station.telemetryData.right.toFixed(2); unit: "m/s" }
+            Metric { Layout.fillWidth: true; metricIndex: 1; label: "BATTERY VOLTAGE"; value: station.isLive ? station.telemetryData.battery.toFixed(2) : "--"; unit: "V" }
+            Metric { Layout.fillWidth: true; metricIndex: 2; label: "ROVER HEADING"; value: station.isLive ? (station.telemetryData.heading * 180 / Math.PI).toFixed(0) : "--"; unit: "deg" }
+            Metric { Layout.fillWidth: true; metricIndex: 3; label: "LEFT WHEEL SPD"; value: station.isLive ? station.telemetryData.left.toFixed(2) : "--"; unit: "m/s" }
+            Metric { Layout.fillWidth: true; metricIndex: 4; label: "RIGHT WHEEL SPD"; value: station.isLive ? station.telemetryData.right.toFixed(2) : "--"; unit: "m/s" }
         }
 
         RowLayout {
@@ -140,5 +203,11 @@ ApplicationWindow {
         }
     }
 
-    SettingsPanel { id: settings }
+    SettingsPanel {
+        id: settings
+        onOpened: {
+            station.clearKeys();
+            station.stop();
+        }
+    }
 }

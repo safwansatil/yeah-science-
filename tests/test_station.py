@@ -1,5 +1,6 @@
 import unittest
 from unittest.mock import patch
+import time
 
 from PySide6.QtCore import QCoreApplication
 
@@ -76,3 +77,95 @@ class StationTests(unittest.TestCase):
         self.station.tick()
         self.assertEqual(self.station.invalidPackets, 1)
         self.assertIsNone(self.station.telemetry.received_at)
+
+    def test_connection_state_lifecycle(self):
+        self.assertEqual(self.station.connectionState, "waiting")
+        self.assertFalse(self.station.isLive)
+
+        self.station.link.incoming = [encode("telemetry", 1, x=0, y=0, heading=0,
+                                            left=0, right=0, battery=12.0, failsafe=False)]
+        self.station.tick()
+        self.assertEqual(self.station.connectionState, "live")
+        self.assertTrue(self.station.isLive)
+
+        self.station._last_telemetry_time = time.monotonic() - 1.5
+        self.station.tick()
+        self.assertEqual(self.station.connectionState, "stale")
+        self.assertFalse(self.station.isLive)
+
+        self.station.link.incoming = [encode("telemetry", 2, x=0, y=0, heading=0,
+                                            left=0, right=0, battery=12.0, failsafe=False)]
+        self.station.tick()
+        self.assertEqual(self.station.connectionState, "live")
+        self.assertTrue(self.station.isLive)
+
+    def test_noise_and_arbitrary_bytes_do_not_establish_live_connection(self):
+        self.assertEqual(self.station.connectionState, "waiting")
+        self.station.link.incoming = [b"arbitrary_garbage_bytes", b"still_not_telemetry"]
+        self.station.tick()
+        self.assertEqual(self.station.connectionState, "waiting")
+        self.assertFalse(self.station.isLive)
+
+    def test_keyboard_driving_forward_and_stop(self):
+        self.station.toggleArm()
+        self.station.handleKeyPress("w")
+        self.assertAlmostEqual(self.station.leftCommand, 0.55)
+        self.assertAlmostEqual(self.station.rightCommand, 0.55)
+
+        self.station.handleKeyRelease("w")
+        self.assertEqual(self.station.leftCommand, 0)
+        self.assertEqual(self.station.rightCommand, 0)
+
+    def test_keyboard_aliases_w_and_up(self):
+        self.station.toggleArm()
+        self.station.handleKeyPress("w")
+        self.station.handleKeyPress("up")
+        self.assertAlmostEqual(self.station.leftCommand, 0.55)
+        self.assertAlmostEqual(self.station.rightCommand, 0.55)
+
+        self.station.handleKeyRelease("w")
+        self.assertAlmostEqual(self.station.leftCommand, 0.55)
+        self.assertAlmostEqual(self.station.rightCommand, 0.55)
+
+        self.station.handleKeyRelease("up")
+        self.assertEqual(self.station.leftCommand, 0)
+
+    def test_keyboard_opposing_directions_cancel(self):
+        self.station.toggleArm()
+        self.station.handleKeyPress("w")
+        self.station.handleKeyPress("s")
+        self.assertEqual(self.station.leftCommand, 0)
+        self.assertEqual(self.station.rightCommand, 0)
+
+        self.station.handleKeyRelease("w")
+        self.station.handleKeyRelease("s")
+        self.station.handleKeyPress("a")
+        self.station.handleKeyPress("d")
+        self.assertEqual(self.station.leftCommand, 0)
+        self.assertEqual(self.station.rightCommand, 0)
+
+    def test_keyboard_clear_keys_on_disarm_and_disconnect(self):
+        self.station.toggleArm()
+        self.station.handleKeyPress("w")
+        self.assertAlmostEqual(self.station.leftCommand, 0.55)
+
+        self.station.toggleArm()
+        self.assertEqual(self.station.leftCommand, 0)
+        self.assertEqual(len(self.station._active_keys), 0)
+
+        self.station.toggleArm()
+        self.assertEqual(self.station.leftCommand, 0)
+
+    def test_stale_telemetry_halts_drive(self):
+        self.station.toggleArm()
+        self.station.handleKeyPress("w")
+        self.assertAlmostEqual(self.station.leftCommand, 0.55)
+
+        self.station.link.incoming = [encode("telemetry", 1, x=0, y=0, heading=0,
+                                            left=0, right=0, battery=12.0, failsafe=False)]
+        self.station.tick()
+
+        self.station._last_telemetry_time = time.monotonic() - 1.5
+        self.station.tick()
+        self.assertEqual(self.station.leftCommand, 0)
+        self.assertEqual(len(self.station._active_keys), 0)
